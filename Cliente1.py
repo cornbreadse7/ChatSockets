@@ -22,6 +22,10 @@ message_label.pack(side=tk.LEFT)
 message_entry = tk.Entry(root)
 message_entry.pack(side=tk.LEFT)
 
+# Crear una caja de texto para mostrar la conversación
+chat_label = tk.Label(root, text='')
+chat_label.pack(side=tk.BOTTOM)
+
 # Función para enviar un mensaje al servidor
 def send_message(event=None):
     username = username_entry.get()
@@ -42,23 +46,18 @@ def receive_messages():
         data = client_socket.recv(1024)
         # Decodificar los datos recibidos
         message = data.decode()
-        # Agregar el mensaje a la caja de texto
-        chat_box.insert(tk.END, f'{message}\n')
+        # Actualizar la caja de texto de la conversación
+        chat_label.config(text=chat_label.cget('text') + '\n' + message)
 
-# Conectar al servidor
+# Crear un socket para el cliente
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+# Conectarse al servidor
 client_socket.connect((HOST, PORT))
 
 # Iniciar un hilo para recibir mensajes del servidor
 receive_thread = threading.Thread(target=receive_messages)
 receive_thread.start()
 
-# Crear una caja de texto para mostrar los mensajes
-chat_box = tk.Text(root)
-chat_box.pack()
-
-# Iniciar la ventana de chat
+# Iniciar el bucle principal de la aplicación
 root.mainloop()
-
-# Cerrar la conexión del cliente
-client_socket.close()

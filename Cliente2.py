@@ -22,43 +22,98 @@ message_label.pack(side=tk.LEFT)
 message_entry = tk.Entry(root)
 message_entry.pack(side=tk.LEFT)
 
-# Función para enviar un mensaje al servidor
-def send_message(event=None):
-    username = username_entry.get()
-    message = message_entry.get()
-    # Enviar el mensaje al servidor
-    client_socket.sendall(f'{username}: {message}'.encode())
-    # Borrar la caja de entrada del mensaje
-    message_entry.delete(0, tk.END)
+# Crear una caja de texto para mostrar la conversación
+conversation_box = tk.Text(root, height=20, width=50)
+conversation_box.pack()
 
-# Configurar el botón de enviar mensaje
-send_button = tk.Button(root, text='Send', command=send_message)
-send_button.pack(side=tk.LEFT)
+# Crear una caja de texto para escribir el mensaje
+message_box = tk.Text(root, height=2, width=50)
+message_box.pack()
+
+# Función para enviar un mensaje al servidor
+def send_message():
+    # Obtener el mensaje de la caja de texto y limpiar la caja
+    message = message_box.get('1.0', tk.END).strip()
+    message_box.delete('1.0', tk.END)
+
+    # Enviar el mensaje al servidor
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect((HOST, PORT))
+        sock.sendall(message.encode('utf-8'))
+
+# Crear un botón para enviar el mensaje
+send_button = tk.Button(root, text='Enviar', command=send_message)
+send_button.pack()
 
 # Función para recibir mensajes del servidor
-def receive_messages():
+def receive_message(sock):
     while True:
-        # Recibir datos del servidor
-        data = client_socket.recv(1024)
-        # Decodificar los datos recibidos
-        message = data.decode()
-        # Agregar el mensaje a la caja de texto
-        chat_box.insert(tk.END, f'{message}\n')
+        # Recibir un mensaje del servidor
+        message = sock.recv(1024).decode('utf-8')
 
-# Conectar al servidor
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
+        # Mostrar el mensaje en la caja de texto de conversación
+        conversation_box.insert(tk.END, message)
 
-# Iniciar un hilo para recibir mensajes del servidor
-receive_thread = threading.Thread(target=receive_messages)
-receive_thread.start()
+# Conectar con el servidor y empezar a recibir mensajes
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    sock.connect((HOST, PORT))
+    receive_thread = threading.Thread(target=receive_message, args=(sock,))
+    receive_thread.daemon = True
+    receive_thread.start()
 
-# Crear una caja de texto para mostrar los mensajes
-chat_box = tk.Text(root)
-chat_box.pack()
+    # Ejecutar la ventana de chat
+    root.mainloop()
+import socket
+import threading
+import tkinter as tk
 
-# Iniciar la ventana de chat
-root.mainloop()
+# Definir el host y el puerto en el que se ejecuta el servidor
+HOST = '127.0.0.1'
+PORT = 5000
 
-# Cerrar la conexión del cliente
-client_socket.close()
+# Crear una ventana de chat
+root = tk.Tk()
+root.title('Chat - Cliente 2')
+root.geometry('400x500')
+
+# Crear una caja de texto para mostrar la conversación
+conversation_box = tk.Text(root, height=20, width=50)
+conversation_box.grid(row=0, column=0, padx=10, pady=10)
+
+# Crear una caja de texto para escribir el mensaje
+message_box = tk.Text(root, height=2, width=50)
+message_box.grid(row=1, column=0, padx=10, pady=10)
+
+# Función para enviar un mensaje al servidor
+def send_message():
+    # Obtener el mensaje de la caja de texto y limpiar la caja
+    message = message_box.get('1.0', tk.END).strip()
+    message_box.delete('1.0', tk.END)
+
+    # Enviar el mensaje al servidor
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.connect((HOST, PORT))
+        sock.sendall(message.encode('utf-8'))
+
+# Crear un botón para enviar el mensaje
+send_button = tk.Button(root, text='Enviar', command=send_message)
+send_button.grid(row=2, column=0, padx=10, pady=10)
+
+# Función para recibir mensajes del servidor
+def receive_message(sock):
+    while True:
+        # Recibir un mensaje del servidor
+        message = sock.recv(1024).decode('utf-8')
+
+        # Mostrar el mensaje en la caja de texto de conversación
+        conversation_box.insert(tk.END, message)
+
+# Conectar con el servidor y empezar a recibir mensajes
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    sock.connect((HOST, PORT))
+    receive_thread = threading.Thread(target=receive_message, args=(sock,))
+    receive_thread.daemon = True
+    receive_thread.start()
+
+    # Ejecutar la ventana de chat
+    root.mainloop()
