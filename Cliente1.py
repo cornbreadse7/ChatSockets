@@ -11,20 +11,16 @@ root = tk.Tk()
 root.title('Chat - Cliente 1')
 
 # Crear una caja de entrada para el nombre de usuario
-username_label = tk.Label(root, text='Username:')
+username_label = tk.Label(root, text='Usuario:')
 username_label.pack(side=tk.LEFT)
 username_entry = tk.Entry(root)
 username_entry.pack(side=tk.LEFT)
 
 # Crear una caja de entrada para los mensajes
-message_label = tk.Label(root, text='Message:')
+message_label = tk.Label(root, text='Mensaje:')
 message_label.pack(side=tk.LEFT)
 message_entry = tk.Entry(root)
 message_entry.pack(side=tk.LEFT)
-
-# Crear una caja de texto para mostrar la conversación
-chat_label = tk.Label(root, text='')
-chat_label.pack(side=tk.BOTTOM)
 
 # Función para enviar un mensaje al servidor
 def send_message(event=None):
@@ -36,7 +32,7 @@ def send_message(event=None):
     message_entry.delete(0, tk.END)
 
 # Configurar el botón de enviar mensaje
-send_button = tk.Button(root, text='Send', command=send_message)
+send_button = tk.Button(root, text='Enviar', command=send_message)
 send_button.pack(side=tk.LEFT)
 
 # Función para recibir mensajes del servidor
@@ -46,18 +42,24 @@ def receive_messages():
         data = client_socket.recv(1024)
         # Decodificar los datos recibidos
         message = data.decode()
-        # Actualizar la caja de texto de la conversación
-        chat_label.config(text=chat_label.cget('text') + '\n' + message)
+        # Agregar el mensaje a la caja de texto
+        chat_box.insert(tk.END, f'{message}\n')
 
-# Crear un socket para el cliente
+# Conectar al servidor
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-# Conectarse al servidor
 client_socket.connect((HOST, PORT))
 
 # Iniciar un hilo para recibir mensajes del servidor
 receive_thread = threading.Thread(target=receive_messages)
 receive_thread.start()
 
-# Iniciar el bucle principal de la aplicación
+# Crear una caja de texto para mostrar los mensajes
+chat_box = tk.Text(root)
+chat_box.pack()
+
+
+# Iniciar la ventana de chat
 root.mainloop()
+
+# Cerrar la conexión del cliente
+client_socket.close()
